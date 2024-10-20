@@ -1,4 +1,8 @@
 use std::path::Path;
+
+use maud::html;
+use maud::Markup;
+
 use tiny_http::Header;
 use tiny_http::Response;
 use tiny_http::Server;
@@ -11,6 +15,10 @@ fn main() {
         let segments: Vec<&str> = path.trim_matches('/').split('/').collect();
 
         let response = match segments[..] {
+            [""] => Response::from_string(root().into_string()).with_header(Header {
+                field: "Content-Type".parse().unwrap(),
+                value: "text/html".parse().unwrap(),
+            }),
             ["assets", path] => {
                 let file_path = Path::new("./assets/").join(path);
                 let string = std::fs::read_to_string(file_path).unwrap();
@@ -25,4 +33,10 @@ fn main() {
 
         request.respond(response).unwrap();
     }
+}
+
+fn root() -> Markup {
+    html!(
+        h1 { "tokendb" }
+    )
 }
