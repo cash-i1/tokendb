@@ -7,23 +7,30 @@ use tiny_http::Header;
 use tiny_http::Response;
 use tiny_http::Server;
 
+struct User {
+    token: u64,
+    username: String,
+}
+
 fn main() {
     let server = Server::http("0.0.0.0:2333").unwrap();
+    let mut user: Option<User> = None;
 
     for request in server.incoming_requests() {
         let path = request.url();
         let segments: Vec<&str> = path.trim_matches('/').split('/').collect();
 
         let response = match &segments[..] {
-            [""] => Response::from_string(root().into_string()).with_header(Header {
+            [""] => Response::from_string(root(&mut user).into_string()).with_header(Header {
                 field: "Content-Type".parse().unwrap(),
                 value: "text/html".parse().unwrap(),
             }),
             ["api", endpoint @ ..] => match endpoint {
                 ["login", username, password] => {
-                    let token = (username.chars().map(|c| c as usize).sum::<usize>()
-                        * password.len())
+                    let token = (username.chars().map(|c| c as u64).sum::<u64>()
+                        * password.len() as u64)
                         << 2 * 4 + 42;
+                    user = Some(User { token, username: username.to_string() });
                     Response::from_string(token.to_string()).with_status_code(200)
                 }
                 _ => Response::from_string("api endpoint does not exist").with_status_code(404),
@@ -44,15 +51,19 @@ fn main() {
     }
 }
 
-fn top_bar() -> Markup {
+fn top_bar(user: &mut Option<User>) -> Markup {
     html!(
         div id="top_bar" {
-            span { "username" }
-            input type="text" id="username_input" {}
-            span { "password" }
-            input type="text" id="password_input" {}
+            @if let Some(user) = user {
+                span { "hello, " (user.username) "!" }
+            } @else {
+                span { "username" }
+                input type="text" id="username_input" {}
+                span { "password" }
+                input type="text" id="password_input" {}
 
-            button onclick="login()" id="login_button" { "login" }
+                button onclick="login()" id="login_button" { "login" }
+            }
         }
         script {(maud::PreEscaped(
             r#"
@@ -64,6 +75,7 @@ fn top_bar() -> Markup {
                     .then(data => data.text())
                     .then(token => {
                         localStorage.setItem("token", token);
+                        location.reload();
                     });
 
             }
@@ -72,9 +84,9 @@ fn top_bar() -> Markup {
     )
 }
 
-fn root() -> Markup {
+fn root(user: &mut Option<User>) -> Markup {
     html!(
-        (top_bar())
+        (top_bar(user))
         h1 { "tokendb" }
     )
 }
