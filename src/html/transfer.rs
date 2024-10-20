@@ -8,12 +8,15 @@ pub fn transfer(database: &mut Database) -> Markup {
         (super::head())
         (super::top_bar(database))
         h1 { "transfer" }
-        @if database.current_user.is_some() {
+        @if let Some(current_user) = &database.current_user {
+            span { "current balance: " (current_user.balance) }
+            br {}
+
             span { "transfer " }
-            input type="number" {}
+            input type="number" id="amount_input" {}
             span { " tokens to " }
 
-            select {
+            select id="to_select" {
                 @for user in database.get_users() {
                     @if database.current_user.is_some()
                     && database.current_user.clone().unwrap().token() == user.token() {
@@ -23,9 +26,25 @@ pub fn transfer(database: &mut Database) -> Markup {
                 }
             }
             br {}
-            button disabled[database.current_user.is_none()] { "transfer" }
+            button disabled[database.current_user.is_none()] onclick="transfer()" { "transfer" }
         } @else {
             h2 { "log in to transfer" }
+        }
+
+        script {(maud::PreEscaped(
+            r#"
+            async function transfer() {
+                console.log("asdfasdfasdfasdf");
+                let from = localStorage.getItem("token");
+                let to = document.getElementById("to_select").value;
+                let amount = document.getElementById("amount_input").value;
+
+                let resp = await fetch(`/api/transfer/${from}/${to}/${amount}`);
+                console.log(resp);
+
+                location.reload();
+            }
+            "#))
         }
     )
 }

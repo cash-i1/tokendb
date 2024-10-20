@@ -74,6 +74,37 @@ fn main() {
                         }
                     }
                 }
+                ["transfer", from, to, amount] => {
+                    let from = from.parse::<u64>();
+                    let to = to.parse::<u64>();
+
+                    if from.is_err() || to.is_err() {
+                        Response::from_string("invalid tokens").with_status_code(404)
+                    } else {
+                        let from = from.unwrap();
+                        let to = to.unwrap();
+
+                        let from_user = database.get_user(from);
+                        let to_user = database.get_user(to);
+
+                        if from_user.is_none() || to_user.is_none() {
+                            Response::from_string("users dont exist").with_status_code(404)
+                        } else {
+                            let mut from_user = from_user.unwrap();
+                            let mut to_user = to_user.unwrap();
+
+                            from_user.balance -= amount.parse::<f32>().unwrap();
+                            to_user.balance += amount.parse::<f32>().unwrap();
+                            
+                            println!("fub: {}, tub: {}", from_user.balance, to_user.balance);
+
+                            database.update_user(from, &from_user);
+                            database.update_user(to, &from_user);
+
+                            Response::from_string("transfered").with_status_code(200)
+                        }
+                    }
+                }
                 _ => Response::from_string("api endpoint does not exist").with_status_code(404),
             },
             ["assets", path] => {

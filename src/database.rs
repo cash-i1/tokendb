@@ -18,7 +18,10 @@ impl Database {
         if !std::fs::exists(path).unwrap() {
             std::fs::write(path, "").unwrap();
         }
-        Database { path, current_user: None }
+        Database {
+            path,
+            current_user: None,
+        }
     }
     pub fn get_users(&self) -> Vec<User> {
         let string = std::fs::read_to_string(self.path).unwrap();
@@ -43,6 +46,24 @@ impl Database {
             return;
         }
         users.push(user.clone());
+        let new_json: Value = serde_json::from_value(json!({"users": users})).unwrap();
+        let new_string = serde_json::to_string_pretty(&new_json).unwrap();
+        std::fs::write(self.path, new_string).unwrap();
+    }
+    pub fn update_user(&self, token: u64, new_user: &User) {
+        let string = std::fs::read_to_string(self.path).unwrap();
+        let json: Value = serde_json::from_str(&string).unwrap();
+        let mut users: Vec<User> =
+            serde_json::from_value(json.get("users").unwrap().clone()).unwrap();
+
+        let pos = users.iter().position(|u| u.token() == token);
+        if pos.is_none() {
+            return;
+        }
+        let pos = pos.unwrap();
+
+        users[pos] = new_user.clone();
+
         let new_json: Value = serde_json::from_value(json!({"users": users})).unwrap();
         let new_string = serde_json::to_string_pretty(&new_json).unwrap();
         std::fs::write(self.path, new_string).unwrap();
