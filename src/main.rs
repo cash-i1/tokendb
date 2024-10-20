@@ -20,12 +20,12 @@ fn main() {
         let segments: Vec<&str> = path.trim_matches('/').split('/').collect();
 
         let response = match &segments[..] {
-            [""] => Response::from_string(html::root(&mut database).into_string()).with_header(
-                Header {
+            [""] => {
+                Response::from_string(html::root(&mut database).into_string()).with_header(Header {
                     field: "Content-Type".parse().unwrap(),
                     value: "text/html".parse().unwrap(),
-                },
-            ),
+                })
+            }
             ["transfer"] => Response::from_string(html::transfer(&mut database).into_string())
                 .with_header(Header {
                     field: "Content-Type".parse().unwrap(),
@@ -42,6 +42,27 @@ fn main() {
                 ["logout"] => {
                     database.current_user = None;
                     Response::from_string("logged out").with_status_code(200)
+                }
+                ["i_have_token", token] => {
+                    let token = token.parse::<u64>();
+                    if token.is_err() {
+                        Response::from_string("invalid token").with_status_code(404)
+                    } else {
+                        let token = token.unwrap();
+
+                        let user = database.get_user(token);
+                        if user.is_none() {
+                            Response::from_string(
+                                "token does not belong to an already created user",
+                            )
+                            .with_status_code(404)
+                        } else {
+                            let user = user.unwrap();
+
+                            database.current_user = Some(user);
+                            Response::from_string("logged in").with_status_code(200)
+                        }
+                    }
                 }
                 _ => Response::from_string("api endpoint does not exist").with_status_code(404),
             },
