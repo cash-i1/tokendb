@@ -1,3 +1,5 @@
+mod html;
+
 use std::path::Path;
 
 use maud::html;
@@ -65,7 +67,7 @@ fn main() {
 
         let response = match &segments[..] {
             [""] => {
-                Response::from_string(root(&mut current_user).into_string()).with_header(Header {
+                Response::from_string(html::root(&mut current_user).into_string()).with_header(Header {
                     field: "Content-Type".parse().unwrap(),
                     value: "text/html".parse().unwrap(),
                 })
@@ -110,49 +112,3 @@ fn main() {
     }
 }
 
-fn top_bar(user: &mut Option<User>) -> Markup {
-    html!(
-        div id="top_bar" {
-            @if let Some(user) = user {
-                span { "hello, " (user.username) "!" }
-
-                button onclick="logout()" id="logout_button" { "logout" }
-            } @else {
-                span { "username" }
-                input type="text" id="username_input" {}
-                span { "password" }
-                input type="text" id="password_input" {}
-
-                button onclick="login()" id="login_button" { "login" }
-            }
-        }
-        script {(maud::PreEscaped(
-            r#"
-            function login() {
-                let username = document.getElementById("username_input").value;
-                let password = document.getElementById("password_input").value;
-
-                let token = fetch(`/api/get_token/${username}/${password}`)
-                    .then(data => data.text())
-                    .then(token => {
-                        localStorage.setItem("token", token);
-                        location.reload();
-                    });
-
-            }
-            async function logout() {
-                localStorage.clear();
-                await fetch("/api/logout");
-                location.reload();
-            }
-            "#))
-        }
-    )
-}
-
-fn root(user: &mut Option<User>) -> Markup {
-    html!(
-        (top_bar(user))
-        h1 { "tokendb" }
-    )
-}
