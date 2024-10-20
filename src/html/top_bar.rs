@@ -24,7 +24,7 @@ pub fn top_bar(user: &mut Option<User>) -> Markup {
                 let username = document.getElementById("username_input").value;
                 let password = document.getElementById("password_input").value;
 
-                let token = fetch(`/api/get_token/${username}/${password}`)
+                let token = fetch(`/api/login/${username}/${password}`)
                     .then(data => data.text())
                     .then(token => {
                         localStorage.setItem("token", token);

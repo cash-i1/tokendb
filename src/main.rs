@@ -28,7 +28,7 @@ fn main() {
                 },
             ),
             ["api", endpoint @ ..] => match endpoint {
-                ["get_token", username, password] => {
+                ["login", username, password] => {
                     let token = (username.chars().map(|c| c as u64).sum::<u64>()
                         * password.len() as u64)
                         << 2 * 4 + 42;
