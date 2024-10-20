@@ -26,7 +26,7 @@ fn main() {
                 value: "text/html".parse().unwrap(),
             }),
             ["api", endpoint @ ..] => match endpoint {
-                ["login", username, password] => {
+                ["get_token", username, password] => {
                     let token = (username.chars().map(|c| c as u64).sum::<u64>()
                         * password.len() as u64)
                         << 2 * 4 + 42;
@@ -56,6 +56,8 @@ fn top_bar(user: &mut Option<User>) -> Markup {
         div id="top_bar" {
             @if let Some(user) = user {
                 span { "hello, " (user.username) "!" }
+
+                button onclick="logout()" id="logout_button" { "logout" }
             } @else {
                 span { "username" }
                 input type="text" id="username_input" {}
@@ -71,13 +73,17 @@ fn top_bar(user: &mut Option<User>) -> Markup {
                 let username = document.getElementById("username_input").value;
                 let password = document.getElementById("password_input").value;
 
-                let token = fetch(`/api/login/${username}/${password}`)
+                let token = fetch(`/api/get_token/${username}/${password}`)
                     .then(data => data.text())
                     .then(token => {
                         localStorage.setItem("token", token);
                         location.reload();
                     });
 
+            }
+            function logout() {
+                localStorage.clear();
+                location.reload();
             }
             "#))
         }
