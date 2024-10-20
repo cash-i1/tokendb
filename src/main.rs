@@ -1,60 +1,15 @@
+mod database;
 mod html;
+mod user;
+
+use database::Database;
+use user::User;
 
 use std::path::Path;
-
-use maud::html;
-use maud::Markup;
-
-use serde::Deserialize;
-use serde::Serialize;
-use serde_json::json;
-use serde_json::Value;
 
 use tiny_http::Header;
 use tiny_http::Response;
 use tiny_http::Server;
-
-#[derive(Clone, Copy)]
-struct Database {
-    path: &'static Path,
-}
-impl Database {
-    fn new(path: &'static Path) -> Database {
-        if !path.is_file() {
-            panic!()
-        }
-        if !std::fs::exists(path).unwrap() {
-            std::fs::write(path, "").unwrap();
-        }
-        Database { path }
-    }
-    fn get_users(&self) -> Vec<User> {
-        let string = std::fs::read_to_string(self.path).unwrap();
-        let json: Value = serde_json::from_str(&string).unwrap();
-        let users: Vec<User> = serde_json::from_value(json.get("users").unwrap().clone()).unwrap();
-        users
-    }
-    fn get_user(&self, token: u64) -> Option<User> {
-        let users = self.get_users();
-        users.iter().cloned().find(|user| user.token == token)
-    }
-    fn add_user(&self, user: &User) {
-        let string = std::fs::read_to_string(self.path).unwrap();
-        let json: Value = serde_json::from_str(&string).unwrap();
-        let mut users: Vec<User> =
-            serde_json::from_value(json.get("users").unwrap().clone()).unwrap();
-        users.push(user.clone());
-        let new_json: Value = serde_json::from_value(json!({"users": users})).unwrap();
-        let new_string = serde_json::to_string_pretty(&new_json).unwrap();
-        std::fs::write(self.path, new_string).unwrap();
-    }
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-struct User {
-    token: u64,
-    username: String,
-}
 
 fn main() {
     let server = Server::http("0.0.0.0:2333").unwrap();
@@ -66,12 +21,12 @@ fn main() {
         let segments: Vec<&str> = path.trim_matches('/').split('/').collect();
 
         let response = match &segments[..] {
-            [""] => {
-                Response::from_string(html::root(&mut current_user).into_string()).with_header(Header {
+            [""] => Response::from_string(html::root(&mut current_user).into_string()).with_header(
+                Header {
                     field: "Content-Type".parse().unwrap(),
                     value: "text/html".parse().unwrap(),
-                })
-            }
+                },
+            ),
             ["api", endpoint @ ..] => match endpoint {
                 ["get_token", username, password] => {
                     let token = (username.chars().map(|c| c as u64).sum::<u64>()
@@ -111,4 +66,3 @@ fn main() {
         request.respond(response).unwrap();
     }
 }
-

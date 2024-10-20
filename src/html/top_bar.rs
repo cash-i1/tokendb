@@ -1,6 +1,6 @@
-use crate::User;
-use maud::Markup;
+use crate::user::User;
 use maud::html;
+use maud::Markup;
 
 pub fn top_bar(user: &mut Option<User>) -> Markup {
     html!(
@@ -41,4 +41,3 @@ pub fn top_bar(user: &mut Option<User>) -> Markup {
         }
     )
 }
-

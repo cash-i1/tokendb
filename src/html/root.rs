@@ -1,4 +1,4 @@
-use crate::User;
+use crate::user::User;
 use maud::html;
 use maud::Markup;
 
