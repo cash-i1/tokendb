@@ -36,6 +36,11 @@ fn main() {
                     field: "Content-Type".parse().unwrap(),
                     value: "text/html".parse().unwrap(),
                 }),
+            ["account"] => Response::from_string(html::account(&mut database).into_string())
+                .with_header(Header {
+                    field: "Content-Type".parse().unwrap(),
+                    value: "text/html".parse().unwrap(),
+                }),
             ["api", endpoint @ ..] => match endpoint {
                 ["login", username, password] => {
                     let user = User::new(username.to_string(), password.to_string());
