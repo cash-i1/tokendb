@@ -4,6 +4,7 @@ use maud::Markup;
 pub fn head() -> Markup {
     html!(
         head {
+            link rel="stylesheet" href="/assets/styles.css" {}
             script {(maud::PreEscaped(
                 r#"
                 async function i_have_token() {
