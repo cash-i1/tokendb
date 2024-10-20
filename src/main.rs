@@ -14,11 +14,19 @@ fn main() {
         let path = request.url();
         let segments: Vec<&str> = path.trim_matches('/').split('/').collect();
 
-        let response = match segments[..] {
+        let response = match &segments[..] {
             [""] => Response::from_string(root().into_string()).with_header(Header {
                 field: "Content-Type".parse().unwrap(),
                 value: "text/html".parse().unwrap(),
             }),
+            ["api", endpoint @ ..] => match endpoint {
+                ["login", username, password] => Response::from_string(format!(
+                    "login with user: {} and pass: {}",
+                    username, password
+                ))
+                .with_status_code(404),
+                _ => Response::from_string("api endpoint does not exist").with_status_code(404),
+            },
             ["assets", path] => {
                 let file_path = Path::new("./assets/").join(path);
                 let string = std::fs::read_to_string(file_path).unwrap();
@@ -28,7 +36,7 @@ fn main() {
                     value: "text/plain".parse().unwrap(),
                 })
             }
-            _ => Response::from_string("".to_string()),
+            _ => Response::from_string("page does not exist").with_status_code(404),
         };
 
         request.respond(response).unwrap();
