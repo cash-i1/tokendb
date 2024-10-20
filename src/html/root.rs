@@ -1,10 +1,10 @@
-use crate::user::User;
+use crate::database::Database;
 use maud::html;
 use maud::Markup;
 
-pub fn root(user: &mut Option<User>) -> Markup {
+pub fn root(database: &mut Database) -> Markup {
     html!(
-        (super::top_bar(user))
+        (super::top_bar(database))
         h1 { "tokendb" }
         a href="/transfer" { "transfer" }
     )

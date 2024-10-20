@@ -5,9 +5,10 @@ use std::path::Path;
 use serde_json::json;
 use serde_json::Value;
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub struct Database {
     path: &'static Path,
+    pub current_user: Option<User>,
 }
 impl Database {
     pub fn new(path: &'static Path) -> Database {
@@ -17,7 +18,7 @@ impl Database {
         if !std::fs::exists(path).unwrap() {
             std::fs::write(path, "").unwrap();
         }
-        Database { path }
+        Database { path, current_user: None }
     }
     pub fn get_users(&self) -> Vec<User> {
         let string = std::fs::read_to_string(self.path).unwrap();
