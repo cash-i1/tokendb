@@ -20,11 +20,12 @@ fn main() {
                 value: "text/html".parse().unwrap(),
             }),
             ["api", endpoint @ ..] => match endpoint {
-                ["login", username, password] => Response::from_string(format!(
-                    "login with user: {} and pass: {}",
-                    username, password
-                ))
-                .with_status_code(404),
+                ["login", username, password] => {
+                    let token = (username.chars().map(|c| c as usize).sum::<usize>()
+                        * password.len())
+                        << 2 * 4 + 42;
+                    Response::from_string(token.to_string()).with_status_code(200)
+                }
                 _ => Response::from_string("api endpoint does not exist").with_status_code(404),
             },
             ["assets", path] => {
@@ -56,9 +57,15 @@ fn top_bar() -> Markup {
         script {(maud::PreEscaped(
             r#"
             function login() {
-                let username_input = document.getElementById("username_input");
-                let password_input = document.getElementById("password_input");
-                console.log("username: " + username_input.value + ", password: " + password_input.value);
+                let username = document.getElementById("username_input").value;
+                let password = document.getElementById("password_input").value;
+
+                let token = fetch(`/api/login/${username}/${password}`)
+                    .then(data => data.text())
+                    .then(token => {
+                        localStorage.setItem("token", token);
+                    });
+
             }
             "#))
         }
