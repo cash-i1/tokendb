@@ -29,21 +29,11 @@ fn main() {
             ),
             ["api", endpoint @ ..] => match endpoint {
                 ["login", username, password] => {
-                    let token = (username.chars().map(|c| c as u64).sum::<u64>()
-                        * password.len() as u64)
-                        << 2 * 4 + 42;
-                    current_user = if let Some(user) = database.get_user(token) {
-                        Some(user)
-                    } else {
-                        let new_user = User {
-                            token,
-                            username: username.to_string(),
-                        };
-                        database.add_user(&new_user);
-                        Some(new_user)
-                    };
+                    let user = User::new(username.to_string(), password.to_string());
+                    database.add_user_if_not_already_exists(&user);
+                    current_user = Some(user.clone());
 
-                    Response::from_string(token.to_string()).with_status_code(200)
+                    Response::from_string(user.token().to_string()).with_status_code(200)
                 }
                 ["logout"] => {
                     current_user = None;
