@@ -19,5 +19,6 @@ pub fn root(database: &mut Database) -> Markup {
         (super::top_bar(database))
         h1 { "tokendb" }
         a href="/transfer" { "transfer" }
+        a href="/balance" { "balance" }
     )
 }
