@@ -15,7 +15,7 @@ impl Database {
         if !path.is_file() {
             panic!()
         }
-        if !std::fs::exists(path).unwrap() {
+        if !Path::exists(path) {
             std::fs::write(path, "").unwrap();
         }
         Database {
