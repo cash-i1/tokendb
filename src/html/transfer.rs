@@ -5,6 +5,7 @@ use maud::Markup;
 
 pub fn transfer(database: &mut Database) -> Markup {
     html!(
+        (super::head())
         (super::top_bar(database))
         h1 { "transfer" }
         @if database.current_user.is_some() {

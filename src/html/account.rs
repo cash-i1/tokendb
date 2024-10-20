@@ -4,6 +4,7 @@ use maud::Markup;
 
 pub fn account(database: &mut Database) -> Markup {
     html!(
+        (super::head())
         (super::top_bar(database))
         h1 { "account" }
         @if database.current_user.is_none() {
