@@ -88,6 +88,10 @@ fn main() {
 
                     Response::from_string(token.to_string()).with_status_code(200)
                 }
+                ["logout"] => {
+                    current_user = None;
+                    Response::from_string("logged out").with_status_code(200)
+                }
                 _ => Response::from_string("api endpoint does not exist").with_status_code(404),
             },
             ["assets", path] => {
@@ -136,8 +140,9 @@ fn top_bar(user: &mut Option<User>) -> Markup {
                     });
 
             }
-            function logout() {
+            async function logout() {
                 localStorage.clear();
+                await fetch("/api/logout");
                 location.reload();
             }
             "#))
