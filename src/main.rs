@@ -35,8 +35,31 @@ fn main() {
     }
 }
 
+fn top_bar() -> Markup {
+    html!(
+        div id="top_bar" {
+            span { "username" }
+            input type="text" id="username_input" {}
+            span { "password" }
+            input type="text" id="password_input" {}
+
+            button onclick="login()" id="login_button" { "login" }
+        }
+        script {(maud::PreEscaped(
+            r#"
+            function login() {
+                let username_input = document.getElementById("username_input");
+                let password_input = document.getElementById("password_input");
+                console.log("username: " + username_input.value + ", password: " + password_input.value);
+            }
+            "#))
+        }
+    )
+}
+
 fn root() -> Markup {
     html!(
+        (top_bar())
         h1 { "tokendb" }
     )
 }
