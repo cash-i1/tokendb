@@ -19,6 +19,36 @@ fn main() {
         let path = request.url();
         let segments: Vec<&str> = path.trim_matches('/').split('/').collect();
 
+        for header in request.headers() {
+            match (
+                header.clone().field.as_str().as_ref(),
+                header.clone().value.as_str(),
+            ) {
+                ("Cookie", value) => {
+                    let cookies_str = value.split(" ;").collect::<Vec<&str>>();
+                    let mut cookies: Vec<(&str, &str)> = vec![];
+
+                    for cookie in cookies_str {
+                        let cookie_parts = cookie.split("=").collect::<Vec<&str>>();
+                        let cookie_field = cookie_parts[0];
+                        let cookie_value = cookie_parts[1];
+                        cookies.push((cookie_field, cookie_value));
+                    }
+
+                    for cookie in cookies {
+                        if cookie.0 == "token" {
+                            if let Ok(token) = cookie.1.parse::<u64>() {
+                                if let Some(user) = database.get_user(token) {
+                                    database.current_user = Some(user);
+                                }
+                            }
+                        }
+                    }
+                }
+                _ => (),
+            }
+        }
+
         let response = match &segments[..] {
             [""] => {
                 Response::from_string(html::root(&mut database).into_string()).with_header(Header {
@@ -95,7 +125,7 @@ fn main() {
 
                             from_user.balance -= amount.parse::<f32>().unwrap();
                             to_user.balance += amount.parse::<f32>().unwrap();
-                            
+
                             println!("fub: {}, tub: {}", from_user.balance, to_user.balance);
 
                             database.update_user(from, &from_user);
